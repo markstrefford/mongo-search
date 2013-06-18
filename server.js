@@ -22,7 +22,7 @@ var getHotels = function (request, response, next) {
   request.hotels = {};
   var stream = collection.find(
     { ais: {$all: [parseInt(request.query['aid'])] } }, 
-    { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1 }
+    { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1}
   ).stream();
 
   stream.on('data', function(hotel) {
@@ -107,10 +107,13 @@ var getRates = function (request, response, next) {
       });
     }
 
+    var rating = hotel.re.LateRooms ? hotel.re.LateRooms.asi : null;
+
     return {
       hotelId: hotel.hi,
       name: hotel.hn,
       stars: hotel.nsr,
+      rating: rating,
       'location': { lat: hotel.l.la, 'long': hotel.l.lo },
       address: hotel.add,
       rates: nightsList.length > 1 ? rates : rates[0] 
