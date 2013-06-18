@@ -128,8 +128,13 @@ var getRates = function (request, response, next) {
     rateResponse.push(hotel);
     eTag.update(JSON.stringify(hotel));
   });
+
+  var priceComparer = function(a, b) {
+    return a.rates.price - b.rates.price;
+  }
+
   rateStream.on('end', function() {
-    rateResponse.sort(function(a,b){return (a[nightsList[0]]||[{p:99999999}])[0].p - (b[nightsList[0]]||[{p:99999999}])[0].p;});
+    rateResponse.sort(priceComparer);
     response.setHeader('X-HotelsAvailable', rateResponse.length.toString());
     var hash = eTag.digest('hex');
     response.setHeader('ETag',hash);
