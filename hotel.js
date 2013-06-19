@@ -49,19 +49,12 @@ var getHotelsByLocation = function (request, response, next) {
 
 }
 
-var getHotelsByArea = function (request, response, next) {
-
-  if (!request.query.aid || request.hotels) {
-    next();
-    return;
-  }
-
+var executeQuery = function (query, request, response, next){
+ 
   var collection = request.db.collection('Hotels');
   request.ids = [];
   request.hotels = {};
 
-  var query = request.filter || {};
-  query.ais = {$all: [parseInt(request.query['aid'])] };
   var stream = collection.find(
     query,
     { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1}
@@ -77,9 +70,37 @@ var getHotelsByArea = function (request, response, next) {
   });
 }
 
+
+var getHotelsByArea = function (request, response, next) {
+
+  if (!request.query.aid || request.hotels) {
+    next();
+    return;
+  }
+  var query = request.filter || {};
+  query.ais = {$all: [parseInt(request.query['aid'])] };
+
+  executeQuery(query, request, response, next);
+}
+
+var getHotelsWithinPolygon = function(request, response, next) {
+
+  if (!request.query.poly || request.hotels) {
+    next();
+    return;
+  }
+  console.log(request.query.poly);
+
+  var query = request.filter || {};
+  query.l = { $geoWithin: { $geometry: { type: 'Polygon', coordinates: JSON.parse(request.query.poly) }}};
+
+  executeQuery(query, request, response, next);
+}
+
 module.exports.getHotels = function() {
   return [
            getHotelsByArea,
-           getHotelsByLocation
+           getHotelsByLocation,
+           getHotelsWithinPolygon
          ];
 }
