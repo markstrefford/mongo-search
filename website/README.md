@@ -1,0 +1,1 @@
+This is a spike of an authentication implementation using node.js.
