@@ -28,7 +28,8 @@ var getHotelsByLocation = function (request, response, next) {
     spherical: true,
     limit: 1000,
     maxDistance: parseFloat(request.query.r || 10) / 3959,
-    distanceMultiplier: 3959
+    distanceMultiplier: 3959,
+    query: request.filter
   };
 
   request.db.command( command , function(err, result) {
@@ -58,8 +59,11 @@ var getHotelsByArea = function (request, response, next) {
   var collection = request.db.collection('Hotels');
   request.ids = [];
   request.hotels = {};
+
+  var query = request.filter || {};
+  query.ais = {$all: [parseInt(request.query['aid'])] };
   var stream = collection.find(
-    { ais: {$all: [parseInt(request.query['aid'])] } },
+    query,
     { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1}
   ).stream();
 
