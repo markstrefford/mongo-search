@@ -8,6 +8,7 @@ var mapHotel = function (hotel, distance) {
     rating: rating,
     'location': { lat: hotel.l.la, 'long': hotel.l.lo },
     address: hotel.add,
+    currency: hotel.c,
     distance: distance
   };
 }
@@ -57,7 +58,7 @@ var executeQuery = function (query, request, response, next){
 
   var stream = collection.find(
     query,
-    { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1}
+    { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1, c: 1}
   ).stream();
 
   stream.on('data', function(hotel) {
@@ -89,7 +90,6 @@ var getHotelsWithinPolygon = function(request, response, next) {
     next();
     return;
   }
-  console.log(request.query.poly);
 
   var query = request.filter || {};
   query.l = { $geoWithin: { $geometry: { type: 'Polygon', coordinates: JSON.parse(request.query.poly) }}};
