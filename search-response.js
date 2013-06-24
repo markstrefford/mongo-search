@@ -32,19 +32,13 @@ var descending = function(sort) {
 
 var constructResponse = function(request, response, next) {
   
-  //request.eTag = crypto.createHash('md5');
-
   request.rateResponse.sort(request.sort.descending
                             ? descending(sortBy[request.sort.order])
                             : sortBy[request.sort.order]);
 
-  response.setHeader('X-HotelsAvailable', request.rateResponse.length.toString());
-  response.setHeader('X-HotelCount', request.ids.length.toString());
-  //response.setHeader('ETag', request.eTag.digest('hex'));
-
   var page = request.page.number; 
   var size = request.page.size;
-  var sortQuery =  (request.sort.order ? '&sort=' + request.sort.order : '') + '&ord=' + (request.sort.descending ? 'DESC' : 'ASC' ) + '&ps=' + size;
+  var sortQuery =  (request.sort.order ? '&sort=' + request.sort.order : '') + '&ord=' + (request.sort.descending ? 'desc' : 'asc' ) + '&ps=' + size;
   if(page > 1) {
     response.setHeader('X-Prev', 'http://localhost:9090/hotels?' 
       + request.normalisedQueryString 
@@ -56,7 +50,14 @@ var constructResponse = function(request, response, next) {
       + sortQuery + '&pg=' + (page+1));
   }
 
-  response.send(request.rateResponse.slice((page-1)*size, page*size));
+  var etag = crypto.createHash('md5');
+  var resultPage = request.rateResponse.slice((page-1)*size, page*size);
+  etag.update(JSON.stringify(resultPage));
+
+  response.setHeader('X-HotelsAvailable', request.rateResponse.length.toString());
+  response.setHeader('X-HotelCount', request.ids.length.toString());
+  response.setHeader('ETag', etag.digest('hex'));
+  response.send(resultPage);
   next();
 };
 
