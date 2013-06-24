@@ -13,6 +13,19 @@ var mapHotel = function (hotel, distance) {
   };
 }
 
+var buildFilter = function(search) {
+  var filter = {};
+
+  if(search.facilities) filter.fi = {$all: search.facilities};
+  if(search.appeals) filter.ap = {$all: search.appeals};
+
+  if(search.starRatings) filter.nsr = {$in: search.starRatings};
+  if(search.guestRatings) filter['re.LateRooms.asi'] = {$in: search.guestRatings};
+  if(search.accommodationTypes) filter.at = {$in: search.accommodationTypes};
+
+  return filter;
+}
+
 var getHotelsByLocation = function (request, response, next) {
 
   if (!request.query.loc || request.hotels) {
@@ -20,17 +33,16 @@ var getHotelsByLocation = function (request, response, next) {
     return;
   }
 
-  var loc = request.query.loc.split(',');
   request.hotels = {};
 
   var command = {
     geoNear: 'Hotels',
-    near: [ parseFloat(loc[0]), parseFloat(loc[1]) ],
+    near: request.search.location, 
     spherical: true,
     limit: 1000,
-    maxDistance: parseFloat(request.query.r || 10) / 3959,
+    maxDistance: request.search.radius / 3959,
     distanceMultiplier: 3959,
-    query: request.filter
+    query: buildFilter(request.search)
   };
 
   request.db.command( command , function(err, result) {
@@ -71,34 +83,46 @@ var executeQuery = function (query, request, response, next){
   });
 }
 
+var getHotelsByIds = function (request, response, next) {
 
-var getHotelsByArea = function (request, response, next) {
-
-  if (!request.query.aid || request.hotels) {
+  if (!request.search.hotelIds || request.hotels) {
     next();
     return;
   }
-  var query = request.filter || {};
-  query.ais = {$all: [parseInt(request.query['aid'])] };
+  var query = buildFilter(request.search);
+  query.hi = {$in: request.search.hotelIds};
+
+  executeQuery(query, request, response, next);
+}
+
+var getHotelsByArea = function (request, response, next) {
+
+  if (!request.search.areaId || request.hotels) {
+    next();
+    return;
+  }
+  var query = buildFilter(request.search);
+  query.ais = {$all: [request.search.areaId] };
 
   executeQuery(query, request, response, next);
 }
 
 var getHotelsWithinPolygon = function(request, response, next) {
 
-  if (!request.query.poly || request.hotels) {
+  if (!request.search.polygon || request.hotels) {
     next();
     return;
   }
 
-  var query = request.filter || {};
-  query.l = { $geoWithin: { $geometry: { type: 'Polygon', coordinates: JSON.parse(request.query.poly) }}};
+  var query = buildFilter(request.search);
+  query.l = { $geoWithin: { $geometry: { type: 'Polygon', coordinates: request.search.polygon }}};
 
   executeQuery(query, request, response, next);
 }
 
 module.exports.getHotels = function() {
   return [
+           getHotelsByIds,
            getHotelsByArea,
            getHotelsByLocation,
            getHotelsWithinPolygon

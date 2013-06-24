@@ -1,100 +1,74 @@
-var crypto = require('crypto');
-
-var filterByMaxPrice = function (param, request, response, next) {
-  request.rateFilter.$elemMatch.p = request.rateFilter.$elemMatch.p || {};
-  request.rateFilter.$elemMatch.p.$lte = parseFloat(request.query[param]);
-  next();
-}
-
-var filterByMinPrice = function (param, request, response, next) {
-  request.rateFilter.$elemMatch.p = request.rateFilter.$elemMatch.p || {};
-  request.rateFilter.$elemMatch.p.$gte = parseFloat(request.query[param]);
-  next();
-}
-
-var filterByAdults = function (param, request, response, next) {
-  var match = request.rateFilter.$elemMatch;
-  var adults = parseInt(request.query[param]);
-  match.a = {$gte: adults};
-  if(match.o) { 
-     match.o.$gte += adults;
-  } else {
-     match.o = {$gte: adults};
-  }
-  next();
-}
-
-var filterByChildren = function (param, request, response, next) {
-  var match = request.rateFilter.$elemMatch;
-  var children = parseInt(request.query[param]);
-  if(match.o) {
-    match.o.$gte += children;
-  } else {
-    match.o = {$gte: children};
-  }
-  next();
-}
-  
-var filterBySpecialOffer = function (param, request, response, next) {
-  switch(request.query[param]) {
-    case 'o':
-      request.rateFilter.$elemMatch.t = {$all: ['S']};
-      break;
-    case 'x':
-      request.rateFilter.$elemMatch.t = {$not:{$in:['S']}};
-      break;
-    default:
-  }
-  next();
-}
 
 var getRates = function (request, response, next) {
 
-  //request.eTag = crypto.createHash('md5');
-  var date = new Date(request.query['d'] || new Date()).toJSON().slice(0,10).replace('-','').replace('-','');
-  var rates = request.db.collection('Rates' + date);
+  var getRateFilter = function() {
+    var match = {
+      a: { $gte: request.search.adults},
+      o: { $gte: request.search.adults + request.search.children}
+    };
+    
+    if(request.search.maxPrice) match.p = { $lte: request.search.maxPrice };
+    if(request.search.minPrice) match.p 
+      ? match.p.$gte = request.search.minPrice
+      : match.p = { $gte: request.search.minPrice };
+    switch(request.search.specialOffers) {
+      case 'o':
+        match.t = { $all: ['S']};
+        break;
+      case 'x':
+        match.t = { $not: { $in: ['S']}};
+        break;
+      default:
+        break;
+    }
+    return { $elemMatch: match };
+  }
 
-  var nightsList = (request.query['n']||'1').split(',');
+  var filter = getRateFilter();
+
+  var date = request.search.date.toJSON().slice(0,10).replace('-','').replace('-','');
+  var rates = request.db.collection('Rates' + date);
 
   var projection = {'_id':0, 'hi':1};
 
-  for (var n = 0; n < nightsList.length; n++) {
-    projection[nightsList[n]] = request.rateFilter;
+  for (var n = 0; n < request.search.nights.length; n++) {
+    projection[request.search.nights[n].toString()] = filter;
   }
 
   request.rateResponse = [];
 
   var searchQuery = {'hi': {$in: request.ids}};
-  if (nightsList.length > 1){
+  if (request.search.nights.length > 1){
     var x = [];
-    for (var n = 0; n < nightsList.length; n++) {
+    for (var n = 0; n < request.search.nights.length; n++) {
       var o = {};
-      o[nightsList[n]] = request.rateFilter;
+      o[request.search.nights[n].toString()] = filter;
       x.push(o);
     }
     searchQuery.$or = x;
 
   } else {
-    searchQuery[request.query['n']] = request.rateFilter;
+    searchQuery[request.search.nights[0].toString()] = filter;
   }
 
   var mapRates = function (rate) {
     var hotel = request.hotels[rate.hi];
     var rates = [];
-    for(n = 0; n < nightsList.length; n++) {
-      var nights = nightsList[n];
-      if(!rate[nights]) break;
+    for(n = 0; n < request.search.nights.length; n++) {
+      var nights = request.search.nights[n];
+      var stayRate = rate[nights.toString()];
+      if(!stayRate) break;
       rates.push({
-        nights: parseInt(nights),
-        roomId: rate[nights][0].rm,
-        adults: rate[nights][0].a,
-        children: rate[nights][0].o - rate[nights][0].a,
-        price: rate[nights][0].p,
-        convertedPrice: rate[nights][0].p  * request.exchangeRates[request.query['cur']||'GBP'] / request.exchangeRates[hotel.currency],
-        rack: rate[nights][0].rr
+        nights: nights,
+        roomId: stayRate[0].rm,
+        adults: stayRate[0].a,
+        children: stayRate[0].o - stayRate[0].a,
+        price: stayRate[0].p,
+        convertedPrice: stayRate[0].p  * request.exchangeRates[request.currency] / request.exchangeRates[hotel.currency],
+        rack: stayRate[0].rr
       });
     }
-    hotel.rates = nightsList.length > 1 ? rates : rates[0];
+    hotel.rates = request.search.nights.length > 1 ? rates : rates[0];
     return hotel;
   }
 
@@ -103,7 +77,6 @@ var getRates = function (request, response, next) {
   rateStream.on('data', function(rate) {
     var hotel = mapRates(rate);
     request.rateResponse.push(hotel);
-    //eTag.update(JSON.stringify(hotel));
   });
 
 
@@ -112,72 +85,8 @@ var getRates = function (request, response, next) {
   });
 }
 
-var sortBy = {
-  price: function(a, b) {
-    return a.rates.convertedPrice - b.rates.convertedPrice;
-  },
-  distance: function(a, b) {
-    return a.distance - b.distance;
-  },
-  discount: function(a, b) {
-    return (a.rates.rack / a.rates.price) - (b.rates.rack / b.rates.price);
-  },
-  rating: function(a, b) {
-    return a.rating - b.rating;
-  },
-  stars: function(a, b) {
-    return a.stars - b.stars;
-  },
-  name: function(a, b) {
-    if(a.name < b.name) return -1;
-    if(a.name > b.name) return 1;
-    return 0;
-  }
-}
-
-var descending = function(sort) {
-  return function (a, b) {
-    return sort(b, a);
-  }
-}
-
-var constructResponse = function(request, response, next) {
-  
-  request.rateResponse.sort(request.query['ord']=='desc'
-                            ? descending(sortBy[request.query['sort']])
-                            : sortBy[request.query['sort']]);
-
-  response.setHeader('X-HotelsAvailable', request.rateResponse.length.toString());
-  response.setHeader('X-HotelCount', request.ids.length.toString());
-  //response.setHeader('ETag', request.eTag.digest('hex'));
-
-  var page = parseInt(request.query['pg']||'1');
-  var size = parseInt(request.query['ps']||'50');
-
-  response.send(request.rateResponse.slice((page-1)*size, page*size));
-  next();
-};
-
-var ifSpecified = function(param, filter) {
-  return function(request, response, next) {
-    if(!request.query[param]) {
-      next();
-      return;
-    }
-    if(!request.rateFilter) request.rateFilter = { $elemMatch: {}};
-
-    filter(param, request, response, next);
-  };
-}
-
 module.exports.getRates = function() {
   return [
-           ifSpecified('a', filterByAdults),
-           ifSpecified('c', filterByChildren),
-           ifSpecified('pmin', filterByMinPrice),
-           ifSpecified('pmax', filterByMaxPrice),
-           ifSpecified('s', filterBySpecialOffer),
-           getRates,
-           constructResponse
+           getRates
          ];
 }
