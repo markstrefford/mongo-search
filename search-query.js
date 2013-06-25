@@ -1,3 +1,5 @@
+var crypto = require('crypto');
+
 var normaliseQueryString = function(request, response, next) {
   var params = Object.getOwnPropertyNames(request.query).sort();
   var paramStrings = [];
@@ -76,19 +78,21 @@ var parseSearchQuery = function(request, response, next) {
   request.page = {};
   request.page.number     = get('pg', asInteger, 1);
   request.page.size       = get('ps', asInteger, 50);
-  request.page.getUrlForPage = function(num) {
-    
-  }
 
   request.sort = {};
   request.sort.order      = get('sort', asString);
   request.sort.descending = (get('ord', asString) == 'desc');
   
   request.currency = get('cur', asString, 'GBP');
+
+  var cacheKey = crypto.createHash('md5');
+  cacheKey.update(JSON.stringify(request.search));
+  request.cacheKey = cacheKey.digest('hex');
+
   next();
 }
 
-module.exports.normaliseQueryString = function() {
+module.exports.parse = function() {
   return [ 
     normaliseQueryString,
     parseSearchQuery

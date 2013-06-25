@@ -29,12 +29,10 @@ var descending = function(sort) {
   }
 }
 
-
-var constructResponse = function(request, response, next) {
-  
-  request.rateResponse.sort(request.sort.descending
-                            ? descending(sortBy[request.sort.order])
-                            : sortBy[request.sort.order]);
+var from = function(request, rates, hotelCount, response, next) {
+  rates.sort(request.sort.descending
+    ? descending(sortBy[request.sort.order])
+    : sortBy[request.sort.order]);
 
   var page = request.page.number; 
   var size = request.page.size;
@@ -44,23 +42,34 @@ var constructResponse = function(request, response, next) {
       + request.normalisedQueryString 
       + sortQuery + '&pg=' + (page-1));
   }
-  if(page*size < request.rateResponse.length) {
+  if(page*size < rates.length) {
     response.setHeader('X-Next', 'http://localhost:9090/hotels?' 
       + request.normalisedQueryString 
       + sortQuery + '&pg=' + (page+1));
   }
 
   var etag = crypto.createHash('md5');
-  var resultPage = request.rateResponse.slice((page-1)*size, page*size);
+  var resultPage = rates.slice((page-1)*size, page*size);
+  var exchangeRate = request.exchangeRates[request.currency];
+  resultPage.forEach(
+    request.search.nights.length > 1
+    ? function(result) { result.rates.forEach(function (rate){rate.convertedPrice *= exchangeRate; }); }
+    : function(result) { result.rates.convertedPrice *= exchangeRate; }
+  );
   etag.update(JSON.stringify(resultPage));
 
-  response.setHeader('X-HotelsAvailable', request.rateResponse.length.toString());
-  response.setHeader('X-HotelCount', request.ids.length.toString());
+  response.setHeader('X-HotelsAvailable', rates.length.toString());
+  response.setHeader('X-HotelCount', hotelCount.toString());
   response.setHeader('ETag', etag.digest('hex'));
   response.send(resultPage);
-  next();
-};
+}
 
+var constructResponse = function(request, response, next) {
+  from(request, request.rateResponse, request.ids.length, response, next);
+  next();
+}
+
+module.exports.from = from;
 module.exports.constructResponse = function() {
   return [
            constructResponse

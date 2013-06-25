@@ -64,7 +64,7 @@ var getRates = function (request, response, next) {
         adults: stayRate[0].a,
         children: stayRate[0].o - stayRate[0].a,
         price: stayRate[0].p,
-        convertedPrice: stayRate[0].p  * request.exchangeRates[request.currency] / request.exchangeRates[hotel.currency],
+        convertedPrice: stayRate[0].p / request.exchangeRates[hotel.currency],
         rack: stayRate[0].rr
       });
     }

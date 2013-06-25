@@ -6,6 +6,7 @@ var currency = require('./currency.js');
 var hotelDetails = require('./hotel-details.js');
 var searchQuery = require('./search-query.js');
 var searchResponse = require('./search-response.js');
+var cache = require('./cache.js');
 
 var start = function(config) {
   var server = restify.createServer();
@@ -17,9 +18,9 @@ var start = function(config) {
 
   var mongo = new Mongo(config.mongo_url);
 
-  server.get('/query/', searchQuery.normaliseQueryString(), function(request, response, next) {response.send(request.search);next();});
+  server.get('/query/', searchQuery.parse(), function(request, response, next) {response.send(request.headers.host);next();});
   server.get('/ex/', function(request, response, next) {response.send(request.exchangeRates);next();});
-  server.get('/hotels/', mongo.connect, searchQuery.normaliseQueryString(), hotel.getHotels(), rates.getRates(), searchResponse.constructResponse());
+  server.get('/hotels/', mongo.connect, searchQuery.parse(), cache.checkForCache, hotel.getHotels(), rates.getRates(), searchResponse.constructResponse(), cache.cacheResponse());
   server.get('/hotels/:id/rates/:year/:month/:date/:nights', mongo.connect, hotelDetails.getAllRates());
 
   server.listen(config.port);
