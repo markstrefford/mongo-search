@@ -48,13 +48,17 @@ var from = function(request, rates, hotelCount, response, next) {
       + sortQuery + '&pg=' + (page+1));
   }
 
+  var convert = function(price, ex) {
+    return Math.round(price * ex * 100)/100;
+  }
+
   var etag = crypto.createHash('md5');
   var resultPage = rates.slice((page-1)*size, page*size);
   var exchangeRate = request.exchangeRates[request.currency];
   resultPage.forEach(
     request.search.nights.length > 1
-    ? function(result) { result.rates.forEach(function (rate){rate.convertedPrice *= exchangeRate; }); }
-    : function(result) { result.rates.convertedPrice *= exchangeRate; }
+    ? function(result) { result.rates.forEach(function (rate){rate.convertedPrice *= convert(rate.convertedPrice,exchangeRate); }); }
+    : function(result) { result.rates.convertedPrice = convert(result.rates.convertedPrice, exchangeRate); }
   );
   etag.update(JSON.stringify(resultPage));
 
