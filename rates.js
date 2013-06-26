@@ -1,4 +1,5 @@
-var crypto = require('crypto');
+var crypto = require('crypto')
+  , events = require("./events.js");
 
 var filterByMaxPrice = function (param, request, response, next) {
   request.rateFilter.$elemMatch.p = request.rateFilter.$elemMatch.p || {};
@@ -21,6 +22,7 @@ var filterByAdults = function (param, request, response, next) {
   } else {
      match.o = {$gte: adults};
   }
+  request.emit("stats", { adults: adults });
   next();
 }
 
@@ -32,6 +34,7 @@ var filterByChildren = function (param, request, response, next) {
   } else {
     match.o = {$gte: children};
   }
+  request.emit("stats", { children: children });
   next();
 }
   
@@ -155,6 +158,7 @@ var constructResponse = function(request, response, next) {
   var size = parseInt(request.query['ps']||'50');
 
   response.send(request.rateResponse.slice((page-1)*size, page*size));
+
   next();
 };
 
