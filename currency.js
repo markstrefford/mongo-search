@@ -19,6 +19,10 @@ module.exports.exchangeRates = function() {
       console.log(JSON.stringify(currencies));
     });
   });
+  request.on('error', function(err) {
+    console.log(err);
+    setTimeout(module.exports.exchangeRates, 10000);
+  });
   request.end();
   
   return function(request, response, next){
