@@ -121,11 +121,24 @@ var getHotelsWithinPolygon = function(request, response, next) {
   executeQuery(query, request, response, next);
 }
 
+var getHotelsByName = function(request, response, next) {
+  if (!request.search.text || request.hotels) {
+    next();
+    return;
+  }
+
+  var query = buildFilter(request.search);
+  query.hn = { $regex: request.search.text, $options: 'i'}
+
+  executeQuery(query, request, response, next);
+}
+
 module.exports.getHotels = function() {
   return [
            getHotelsByIds,
            getHotelsByArea,
            getHotelsByLocation,
-           getHotelsWithinPolygon
+           getHotelsWithinPolygon,
+           getHotelsByName
          ];
 }

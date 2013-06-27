@@ -34,6 +34,7 @@ var parseSearchQuery = function(request, response, next) {
   if(request.search.location    = get('loc', asObject))              baseUrl.push(['loc', JSON.stringify(request.search.location)]);
   if(request.search.radius      = get('r', asFloat))                 baseUrl.push(['r', request.search.radius]);
   if(request.search.polygon     = get('poly', asObject))             baseUrl.push(['poly', JSON.stringify(request.search.polygon)]);
+  if(request.search.text        = get('q', asString))                baseUrl.push(['q', encodeURIComponent(request.search.text.toLowerCase())]);
 
   if(request.search.date           = get('d', asDate, new Date()))   baseUrl.push(['d', request.search.date.toJSON().slice(0,10)]); 
   if(request.search.nights         = get('n', asArrayOfInt, [1]))    baseUrl.push(['n', request.search.nights.join(',')]);
