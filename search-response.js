@@ -36,16 +36,11 @@ var from = function(request, rates, hotelCount, response, next) {
 
   var page = request.page.number; 
   var size = request.page.size;
-  var sortQuery =  (request.sort.order ? '&sort=' + request.sort.order : '') + '&ord=' + (request.sort.descending ? 'desc' : 'asc' ) + '&ps=' + size;
   if(page > 1) {
-    response.setHeader('X-Prev', 'http://localhost:9090/hotels?' 
-      + request.normalisedQueryString 
-      + sortQuery + '&pg=' + (page-1));
+    response.setHeader('X-Prev', request.getUrlForPage(page-1));
   }
   if(page*size < rates.length) {
-    response.setHeader('X-Next', 'http://localhost:9090/hotels?' 
-      + request.normalisedQueryString 
-      + sortQuery + '&pg=' + (page+1));
+    response.setHeader('X-Next', request.getUrlForPage(page+1));
   }
 
   var convert = function(price, ex) {

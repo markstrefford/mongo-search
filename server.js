@@ -7,14 +7,18 @@ var hotelDetails = require('./hotel-details.js');
 var searchQuery = require('./search-query.js');
 var searchResponse = require('./search-response.js');
 var cache = require('./cache.js');
+var os = require('os');
 
 var start = function(config) {
-  var server = restify.createServer();
+  var server = restify.createServer({
+    name: os.hostname()
+  });
   
   server.pre(currency.exchangeRates());
 
   server.use(restify.queryParser());
   server.use(restify.gzipResponse());
+  server.use(restify.fullResponse());
 
   var mongo = new Mongo(config.mongo_url);
 

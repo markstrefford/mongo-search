@@ -1,7 +1,7 @@
 var mapHotel = function (hotel, distance) {
   var rating = hotel.re.LateRooms ? hotel.re.LateRooms.asi : null;
 
-  return {
+  var hotel = {
     hotelId: hotel.hi,
     name: hotel.hn,
     stars: hotel.nsr,
@@ -9,8 +9,9 @@ var mapHotel = function (hotel, distance) {
     'location': { lat: hotel.l.la, 'long': hotel.l.lo },
     address: hotel.add,
     currency: hotel.c,
-    distance: distance
   };
+  if(distance) hotel.distance = distance;
+  return hotel;
 }
 
 var buildFilter = function(search) {
