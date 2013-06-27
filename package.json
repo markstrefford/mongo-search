@@ -4,7 +4,8 @@
   , "private": true
   , "dependencies": {
       "mongodb": "latest",
-      "restify": "latest"
+      "restify": "latest",
+      "amqp": "latest"
   }
 }
 
