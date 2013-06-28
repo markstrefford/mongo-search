@@ -27,6 +27,8 @@ var parseSearchQuery = function(request, response, next) {
   
   var baseUrl = [];
 
+  var today = new Date(new Date().toJSON().slice(0,10));
+
   request.search = {};
 
   if(request.search.hotelIds    = get('hids', asOrderedArrayOfInt))  baseUrl.push(['hids', request.search.hotelIds.join(',')]);
@@ -36,7 +38,7 @@ var parseSearchQuery = function(request, response, next) {
   if(request.search.polygon     = get('poly', asObject))             baseUrl.push(['poly', JSON.stringify(request.search.polygon)]);
   if(request.search.text        = get('q', asString))                baseUrl.push(['q', encodeURIComponent(request.search.text.toLowerCase())]);
 
-  if(request.search.date           = get('d', asDate, new Date()))   baseUrl.push(['d', request.search.date.toJSON().slice(0,10)]); 
+  if(request.search.date           = get('d', asDate, today))   baseUrl.push(['d', request.search.date.toJSON().slice(0,10)]); 
   if(request.search.nights         = get('n', asArrayOfInt, [1]))    baseUrl.push(['n', request.search.nights.join(',')]);
   if(request.search.adults         = get('a', asInteger, 2))         baseUrl.push(['a', request.search.adults]);
   if(request.search.children       = get('c', asInteger, 0))         baseUrl.push(['c', request.search.children]);

@@ -1,16 +1,32 @@
-var MongoClient = require('mongodb').MongoClient;
+var MongoClient = require('mongodb').MongoClient,
+    util = require('util'),
+    events = require('events');
 
 var Mongo = function(url) {
-  this.connect = function(request, response, next) {
-    MongoClient.connect(url, function (err, db) {
+
+  events.EventEmitter.call(this);
+  
+  var self = this;
+  var db;
+
+  this.connect = function() {
+    MongoClient.connect(url, function (err, connection) {
       if (err) {
-        next(err);
+        console.log(JSON.stringify(err));
+        self.emit('error');
         return;
       }
-      request.db = db;
-      next();
+      db = connection;
+      self.emit('connected');
     });
   }
+
+  this.getConnection = function(request, response, next) {
+    request.db = db;
+    next();
+  }
 }
+
+util.inherits(Mongo, events.EventEmitter);
 
 module.exports.Mongo = Mongo;
