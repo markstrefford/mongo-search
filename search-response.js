@@ -8,10 +8,10 @@ var from = function(exchangeRate, rates, response) {
     return Math.round(price * ex * 100)/100;
   }
   
-  if(rates[0] instanceof Array) {
-    rates.forEach(function(result) { result.forEach(function (rate) { rate.convertedPrice *= convert(rate.convertedPrice,exchangeRate) }) })
+  if(rates[0].rates instanceof Array) {
+    rates.forEach(function(result) { result.rates.forEach(function (rate) { rate.convertedPrice = convert(rate.convertedPrice, exchangeRate) }) })
   } else {
-    rates.forEach(function(result) { result.convertedPrice = convert(result.convertedPrice, exchangeRate); })
+    rates.forEach(function(result) { result.rates.convertedPrice = convert(result.rates.convertedPrice, exchangeRate); })
   }
 
   var etag = crypto.createHash('md5');

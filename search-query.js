@@ -1,7 +1,12 @@
 var crypto = require('crypto');
 
-var asString = {
+var asLowerString = {
   fromURI: function(str){ return str.toLowerCase(); },
+  toURI: function(val){ return encodeURIComponent(val); }
+}
+
+var asUpperString = {
+  fromURI: function(str){ return str.toUpperCase(); },
   toURI: function(val){ return encodeURIComponent(val); }
 }
 
@@ -40,7 +45,7 @@ var asArrayOfInt = {
 
 var asOrderedArrayOfInt = {
   fromURI: function(str){ return asArrayOfInt.fromURI(str).sort(); },
-  toUrI: asArrayOfInt.toURI
+  toURI: asArrayOfInt.toURI
 }
 
 var asBoolean = {
@@ -63,7 +68,7 @@ var parseSearchQuery = function(request, response, next) {
     'loc':  { convert: asObject,            mapTo: ['search', 'loation'] },
     'r':    { convert: asFloat,             mapTo: ['search', 'radius'] },
     'poly': { convert: asObject,            mapTo: ['search', 'polygon'] },
-    'q':    { convert: asString,            mapTo: ['search', 'text'] },
+    'q':    { convert: asLowerString,       mapTo: ['search', 'text'] },
 
     'd':    { convert: asDate,              mapTo: ['search', 'date'],     defaultValue: today },
     'n':    { convert: asArrayOfInt,        mapTo: ['search', 'nights'],   defaultValue: [1] },
@@ -71,7 +76,7 @@ var parseSearchQuery = function(request, response, next) {
     'c':    { convert: asInteger,           mapTo: ['search', 'children'], defaultValue: 0 },
     'pmin': { convert: asFloat,             mapTo: ['search', 'minPrice'] },
     'pmax': { convert: asFloat,             mapTo: ['search', 'maxPrice'] },
-    's':    { convert: asString,            mapTo: ['search', 'specialOffers'] },
+    's':    { convert: asLowerString,       mapTo: ['search', 'specialOffers'] },
 
     'fi':   { convert: asOrderedArrayOfInt, mapTo: ['search', 'facilities'] },
     'ap':   { convert: asOrderedArrayOfInt, mapTo: ['search', 'appeals'] },
@@ -82,10 +87,10 @@ var parseSearchQuery = function(request, response, next) {
     'pg':   { convert: asInteger,           mapTo: ['page', 'number'],     defaultValue: 1 },
     'ps':   { convert: asInteger,           mapTo: ['page', 'size'],       defaultValue: 50 },  
 
-    'sort': { convert: asString,            mapTo: ['sort', 'order'],      defaultValue: 'price' },
+    'sort': { convert: asLowerString,       mapTo: ['sort', 'order'],      defaultValue: 'price' },
     'desc': { convert: asBoolean,           mapTo: ['sort', 'descending'], defaultValue: false },
 
-    'cur':  { convert: asString,            mapTo: ['currency'],           defaultValue: 'GBP' }
+    'cur':  { convert: asUpperString,       mapTo: ['currency'],           defaultValue: 'GBP' }
   }
   
   var baseURI = [];
