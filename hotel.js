@@ -40,7 +40,7 @@ var getHotelsByLocation = function (request, response, next) {
     geoNear: 'Hotels',
     near: request.search.location, 
     spherical: true,
-    limit: 1000,
+    limit: 10000,
     maxDistance: request.search.radius / 3959,
     distanceMultiplier: 3959,
     query: buildFilter(request.search)
@@ -73,6 +73,11 @@ var executeQuery = function (query, request, response, next){
     query,
     { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1, c: 1}
   ).stream();
+
+  stream.on('error', function(err) {
+    console.log(err);
+    next(err);
+  });
 
   stream.on('data', function(hotel) {
     request.ids.push(hotel.hi);

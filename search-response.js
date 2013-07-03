@@ -7,13 +7,13 @@ var from = function(exchangeRate, rates, response) {
   var convert = function(price, ex) {
     return Math.round(price * ex * 100)/100;
   }
-  
-  if(rates[0].rates instanceof Array) {
-    rates.forEach(function(result) { result.rates.forEach(function (rate) { rate.convertedPrice = convert(rate.convertedPrice, exchangeRate) }) })
-  } else {
-    rates.forEach(function(result) { result.rates.convertedPrice = convert(result.rates.convertedPrice, exchangeRate); })
+  if(rates.length > 0){
+    if(rates[0].rates instanceof Array) {
+      rates.forEach(function(result) { result.rates.forEach(function (rate) { rate.convertedPrice = convert(rate.convertedPrice, exchangeRate) }) })
+    } else {
+      rates.forEach(function(result) { result.rates.convertedPrice = convert(result.rates.convertedPrice, exchangeRate); })
+    }
   }
-
   var etag = crypto.createHash('md5');
   etag.update(JSON.stringify(rates));
   response.setHeader('ETag', etag.digest('hex'));

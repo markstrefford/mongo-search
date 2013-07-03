@@ -65,7 +65,7 @@ var parseSearchQuery = function(request, response, next) {
   var parameters = {
     'hids': { convert: asOrderedArrayOfInt, mapTo: ['search', 'hotelIds'] },
     'aid':  { convert: asInteger,           mapTo: ['search', 'areaId'] },
-    'loc':  { convert: asObject,            mapTo: ['search', 'loation'] },
+    'loc':  { convert: asObject,            mapTo: ['search', 'location'] },
     'r':    { convert: asFloat,             mapTo: ['search', 'radius'] },
     'poly': { convert: asObject,            mapTo: ['search', 'polygon'] },
     'q':    { convert: asLowerString,       mapTo: ['search', 'text'] },

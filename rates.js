@@ -74,6 +74,11 @@ var getRates = function (request, response, next) {
 
   var rateStream = rates.find(searchQuery, projection).stream();
 
+  rateStream.on('error', function(err) {
+    console.log(err);
+    next(err);
+  });
+
   rateStream.on('data', function(rate) {
     var hotel = mapRates(rate);
     request.rateResponse.push(hotel);
