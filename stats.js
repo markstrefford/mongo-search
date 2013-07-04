@@ -6,6 +6,7 @@ function statsHandler(req, data) {
 
 function Stats(server) {
   server.on("after", function (req, res, route, e) {
+    req.emit('stats', {response_time: res.getHeader('response-time')});
     console.log("stats for this request:", req.stats);
     server.emit("stats", req.stats || {});
   });

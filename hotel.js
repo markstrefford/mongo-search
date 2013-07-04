@@ -33,6 +33,7 @@ var getHotelsByLocation = function (request, response, next) {
     next();
     return;
   }
+  request.emit('stats',{search_type: 'location'});
 
   request.hotels = {};
 
@@ -45,7 +46,7 @@ var getHotelsByLocation = function (request, response, next) {
     distanceMultiplier: 3959,
     query: buildFilter(request.search)
   };
-
+  var start = Date.now();
   request.db.command( command , function(err, result) {
     if(err) {
       next(err);
@@ -58,6 +59,10 @@ var getHotelsByLocation = function (request, response, next) {
       request.ids.push(hotel.hi);
       request.hotels[hotel.hi] = mapHotel(hotel, result.results[i].dis);
     }
+    request.emit('stats', {
+      hotel_query_time: Date.now() - start,
+      hotel_count: request.ids.length
+    });
     next();
   });
 
@@ -65,10 +70,10 @@ var getHotelsByLocation = function (request, response, next) {
 
 var executeQuery = function (query, request, response, next){
  
+  var start = Date.now();
   var collection = request.db.collection('Hotels');
   request.ids = [];
   request.hotels = {};
-
   var stream = collection.find(
     query,
     { _id: 0, hi: 1, hn: 1, l: 1, nsr: 1, add: 1, 're.LateRooms.asi': 1, c: 1}
@@ -85,6 +90,10 @@ var executeQuery = function (query, request, response, next){
   });
 
   stream.on('end', function() {
+    request.emit('stats', {
+      hotel_query_time: Date.now() - start,
+      hotel_count: request.ids.length
+    });
     next();
   });
 }
@@ -95,6 +104,7 @@ var getHotelsByIds = function (request, response, next) {
     next();
     return;
   }
+  request.emit('stats',{search_type: 'ids'});
   var query = buildFilter(request.search);
   query.hi = {$in: request.search.hotelIds};
 
@@ -107,6 +117,7 @@ var getHotelsByArea = function (request, response, next) {
     next();
     return;
   }
+  request.emit('stats',{search_type: 'area'});
   var query = buildFilter(request.search);
   query.ais = {$all: [request.search.areaId] };
 
@@ -120,6 +131,7 @@ var getHotelsWithinPolygon = function(request, response, next) {
     return;
   }
 
+  request.emit('stats',{search_type: 'polygon'});
   var query = buildFilter(request.search);
   query.l = { $geoWithin: { $geometry: { type: 'Polygon', coordinates: request.search.polygon }}};
 
@@ -132,6 +144,7 @@ var getHotelsByName = function(request, response, next) {
     return;
   }
 
+  request.emit('stats',{search_type: 'name'});
   var query = buildFilter(request.search);
   query.hn = { $regex: request.search.text, $options: 'i'}
 

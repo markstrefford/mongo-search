@@ -21,9 +21,11 @@ var from = function(exchangeRate, rates, response) {
 }
 
 var sort = function(request, response, next) {
+  var start = Date.now();
   request.rateResponse.sort(request.sort.descending
     ? descending(sortBy[request.sort.order])
     : sortBy[request.sort.order]);
+  request.emit('stats', { sort_time: Date.now() - start });
   next(); 
 }
 

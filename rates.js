@@ -72,6 +72,7 @@ var getRates = function (request, response, next) {
     return hotel;
   }
 
+  var start = Date.now();
   var rateStream = rates.find(searchQuery, projection).stream();
 
   rateStream.on('error', function(err) {
@@ -86,6 +87,10 @@ var getRates = function (request, response, next) {
 
 
   rateStream.on('end', function() {
+    request.emit('stats', {
+      rates_query_time: Date.now() - start,
+      rates_count: request.rateResponse.length
+    });
     next();
   });
 }

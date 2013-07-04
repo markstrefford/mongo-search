@@ -5,9 +5,11 @@ var checkForCache = function(request, response, next) {
   var page = request.page.number;
   var size = request.page.size;
   var cache = request.db.collection('Cache');
+  var start = Date.now();
 
   cache.findOne({ _id: request.cacheKey },
     {
+      timeStamp: 1,
       availableCount: 1,
       hotelCount: 1,
       rates: request.sort.descending 
@@ -21,6 +23,10 @@ var checkForCache = function(request, response, next) {
         return;
       }
       if(doc) {  
+        request.emit('stats', {
+          cache: 'hit',
+          cache_query_time: Date.now() - start
+        });
         var size = request.page.size;
         if(page > 1) {
           response.setHeader('X-Prev', request.getUrlForPage(page-1));
@@ -38,16 +44,21 @@ var checkForCache = function(request, response, next) {
 
         constructResponse.from(
           request.exchangeRates[request.currency], 
-          rates,//.slice((page-1)*size, page*size), 
+          rates, 
           response);
         next(false);
         return;
       }
+      request.emit('stats', {
+        cache: 'miss',
+        cache_query_time: Date.now() - start
+      });
       next();
     });
 }
 
 var cacheResponse = function (request, response, next) {
+  var start = Date.now();
   var cache = request.db.collection('Cache');
   var doc = {
     _id: request.cacheKey,
@@ -68,10 +79,9 @@ var cacheResponse = function (request, response, next) {
     availableCount: request.rateResponse.length,
     hotelCount: request.ids.length,
   }, function (err) {
-    console.log(err);
+    request.emit('stats', { cache_write_time: Date.now() - start });
+    next();
   });
-
-  next();
 }
 
 module.exports.checkForCache = checkForCache;
