@@ -1,3 +1,4 @@
+var restify = require('restify');
 var mapHotel = function (hotel, distance) {
   var rating = hotel.re.LateRooms ? hotel.re.LateRooms.asi : null;
 
@@ -151,12 +152,23 @@ var getHotelsByName = function(request, response, next) {
   executeQuery(query, request, response, next);
 }
 
+var ensureWeHaveHotels = function(request, response, next) {
+  if (request.hotels) {
+    next();
+    return;
+  }
+  var error = new restify.MissingParameterError('search not specified');
+  error.statusCode = 400;
+  return next(error);
+}
+
 module.exports.getHotels = function() {
   return [
            getHotelsByIds,
            getHotelsByArea,
            getHotelsByLocation,
            getHotelsWithinPolygon,
-           getHotelsByName
+           getHotelsByName,
+           ensureWeHaveHotels
          ];
 }

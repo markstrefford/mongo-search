@@ -17,7 +17,7 @@ var start = function(config) {
   server.pre(currency.exchangeRates());
 
   server.use(restify.queryParser());
-  server.use(restify.gzipResponse());
+//  server.use(restify.gzipResponse());
   server.use(restify.fullResponse());
 
   server.use(stats(server));

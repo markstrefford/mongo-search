@@ -33,7 +33,7 @@ function hook_up(server) {
 }
 
 function publish(message) {
-  exchange.publish("search.search", message);
+  exchange.publish("search.stats", message);
 }
 
 module.exports.initialise = initialise;

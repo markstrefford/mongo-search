@@ -108,6 +108,7 @@ var parseSearchQuery = function(request, response, next) {
     } else {
       request[parameter.mapTo[0]] = val;
     }
+    request.search.today = today;
   });
 
   var cacheKey = crypto.createHash('md5');
@@ -132,6 +133,7 @@ var parseSearchQuery = function(request, response, next) {
              pageNumber
            ].join('');
   }
+  if(request.search.location) request.emit('stats', {location: request.search.location});
   next();
 }
 

@@ -17,6 +17,7 @@ var from = function(exchangeRate, rates, response) {
   var etag = crypto.createHash('md5');
   etag.update(JSON.stringify(rates));
   response.setHeader('ETag', etag.digest('hex'));
+  response.cache('public', {maxAge: 300});
   response.send(rates);
 }
 

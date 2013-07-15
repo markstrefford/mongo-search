@@ -3,8 +3,10 @@ var getRates = function (request, response, next) {
 
   var getRateFilter = function() {
     var match = {
-      a: { $gte: request.search.adults},
-      o: { $gte: request.search.adults + request.search.children}
+      a: { $gte: request.search.adults },
+      o: { $gte: request.search.adults + request.search.children },
+      $or: [{ ds: { $exists: 0 } }, { de: { $lte: request.search.today } }],
+      $or: [{ de: { $exists: 0 } }, { de: { $gte: request.search.today } }]
     };
     
     if(request.search.maxPrice) match.p = { $lte: request.search.maxPrice };
@@ -29,7 +31,7 @@ var getRates = function (request, response, next) {
   var date = request.search.date.toJSON().slice(0,10).replace('-','').replace('-','');
   var rates = request.db.collection('Rates' + date);
 
-  var projection = {'_id':0, 'hi':1};
+  var projection = {'_id':1};
 
   for (var n = 0; n < request.search.nights.length; n++) {
     projection[request.search.nights[n].toString()] = filter;
@@ -37,7 +39,7 @@ var getRates = function (request, response, next) {
 
   request.rateResponse = [];
 
-  var searchQuery = {'hi': {$in: request.ids}};
+  var searchQuery = {'_id': {$in: request.ids}};
   if (request.search.nights.length > 1){
     var x = [];
     for (var n = 0; n < request.search.nights.length; n++) {
@@ -52,7 +54,7 @@ var getRates = function (request, response, next) {
   }
 
   var mapRates = function (rate) {
-    var hotel = request.hotels[rate.hi];
+    var hotel = request.hotels[rate._id];
     var rates = [];
     for(n = 0; n < request.search.nights.length; n++) {
       var nights = request.search.nights[n];
