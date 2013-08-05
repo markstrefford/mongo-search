@@ -5,7 +5,9 @@
   , "dependencies": {
       "mongodb": "latest",
       "restify": "latest",
-      "amqp": "latest"
+      "amqp": "latest",
+      "metrics": "latest",
+      "socket.io": "latest"
   }
 }
 
