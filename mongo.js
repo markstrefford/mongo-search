@@ -7,22 +7,28 @@ var Mongo = function(url) {
   events.EventEmitter.call(this);
   
   var self = this;
-  var db;
+  var db = [];
+  var curr = 0;
 
   this.connect = function() {
-    MongoClient.connect(url, function (err, connection) {
-      if (err) {
-        console.log(JSON.stringify(err));
-        self.emit('error');
-        return;
-      }
-      db = connection;
-      self.emit('connected');
-    });
+//    for( var i=0; i<50; i++) {
+      MongoClient.connect(url, function (err, connection) {
+        if (err) {
+          console.log(JSON.stringify(err));
+          self.emit('error');
+          return;
+        }
+//        console.log('connected');
+        db.push(connection);
+//        if(db.length == 50)
+          self.emit('connected');
+      });
+//    }
   }
 
   this.getConnection = function(request, response, next) {
-    request.db = db;
+    request.db = db[0];
+    curr = (curr+1)%50;
     next();
   }
 }

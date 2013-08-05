@@ -17,17 +17,18 @@ var start = function(config) {
   server.pre(currency.exchangeRates());
 
   server.use(restify.queryParser());
-//  server.use(restify.gzipResponse());
   server.use(restify.fullResponse());
 
   server.use(stats(server));
 
   server.get('/ex/', function(request, response, next) {response.send(request.exchangeRates);next();});
   server.get('/search/', search.search(config));
+  server.get('/hotels/', search.hotels(config));
   server.get('/hotels/:id/rates/:year/:month/:date/:nights', mongo.connect, hotelDetails.getAllRates());
 
   mongo.on('connected', function() {
     server.listen(config.port);
+    console.log('service listening on port ' + config.port);
   });
   mongo.on('error', function() { 
     console.log('Failed to connect to Mongo database');

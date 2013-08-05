@@ -1,6 +1,6 @@
 function createCollection(date) {
   var name = 'Rates' + date.toISOString().slice(0,10).replace('-','').replace('-','');
-  db[name].ensureIndex({ '_id': 'hashed'});
+  db[name].ensureIndex({ 'n': 1, 'h': 1 });
 }
 
 var today = new Date()*1;

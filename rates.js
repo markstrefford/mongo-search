@@ -62,7 +62,7 @@ var getRates = function (request, response, next) {
       if(!stayRate) break;
       rates.push({
         nights: nights,
-        roomId: stayRate[0].rm,
+        roomId: stayRate[0].rid,
         adults: stayRate[0].a,
         children: stayRate[0].o - stayRate[0].a,
         price: stayRate[0].p,

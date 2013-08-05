@@ -1,10 +1,25 @@
-var constructResponse = require('./search-response.js');
+var constructResponse = require('./response.js'),
+    MongoClient = require('mongodb').MongoClient;
+
+var conn;
+
+var connect = function(url) {
+  MongoClient.connect(url, function (err, connection) {
+    if (err) {
+      console.log(JSON.stringify(err));
+      return;
+    }
+    conn = connection;
+  });
+}
 
 var checkForCache = function(request, response, next) {
   
+  if (!conn) return next();
+
   var page = request.page.number;
   var size = request.page.size;
-  var cache = request.db.collection('Cache');
+  var cache = conn.collection('Cache');
   var start = Date.now();
 
   cache.findOne({ _id: request.cacheKey },
@@ -58,8 +73,11 @@ var checkForCache = function(request, response, next) {
 }
 
 var cacheResponse = function (request, response, next) {
+
+  if (!conn) return next();
+
   var start = Date.now();
-  var cache = request.db.collection('Cache');
+  var cache = conn.collection('Cache');
   var doc = {
     _id: request.cacheKey,
     timeStamp: new Date(), 
@@ -84,7 +102,10 @@ var cacheResponse = function (request, response, next) {
   });
 }
 
-module.exports.checkForCache = checkForCache;
+module.exports.connect = connect;
+module.exports.checkForCache = function(){
+  return checkForCache;
+}
 module.exports.cacheResponse = function(){
   return cacheResponse;
 }
