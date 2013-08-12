@@ -1,7 +1,7 @@
 var server = require('./server.js');
 
 var config = {
-  cache_url: 'mongodb://10.44.17.54:27017/search?maxPoolSize=50',
+  cache_url: 'mongodb://localhost:27017/search?maxPoolSize=50',
   mongo_url: 'mongodb://localhost:27017/search?maxPoolSize=50',
   //mongo_url: 'mongodb://localhost:9000/search',
   currency_url: 'http://currency.services.laterooms.com/service.svc/currencies',

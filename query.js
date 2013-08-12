@@ -77,6 +77,8 @@ var parseSearchQuery = function(request, response, next) {
     'pmin': { convert: asFloat,             mapTo: ['search', 'minPrice'] },
     'pmax': { convert: asFloat,             mapTo: ['search', 'maxPrice'] },
     's':    { convert: asLowerString,       mapTo: ['search', 'specialOffers'] },
+    
+    'allrates': { convert: asBoolean,       mapTo: ['search', 'allRates'], defaultValue: false },
 
     'fi':   { convert: asOrderedArrayOfInt, mapTo: ['search', 'facilities'] },
     'ap':   { convert: asOrderedArrayOfInt, mapTo: ['search', 'appeals'] },
@@ -115,6 +117,7 @@ var parseSearchQuery = function(request, response, next) {
   cacheKey.update(JSON.stringify(request.search));
   cacheKey.update(request.sort.order);
   request.cacheKey = cacheKey.digest('hex');
+  request.emit('stats',{ cache_key: request.cacheKey } );
 
   baseURI.sort(function(a,b) { if(a[0]>b[0]) return 1; if(a[0]<b[0]) return -1; return 0;} );
   for(var i = 0; i < baseURI.length; i++) {

@@ -7,7 +7,7 @@ var mapHotel = function (hotel, distance) {
     name: hotel.hn,
     stars: hotel.nsr,
     rating: rating,
-    'location': { lat: hotel.l.la, 'long': hotel.l.lo },
+    'location': [hotel.l.lo,hotel.l.la],//{ lat: hotel.l.la, 'long': hotel.l.lo },
     address: hotel.add,
     currency: hotel.c,
   };

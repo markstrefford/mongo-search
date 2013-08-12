@@ -34,7 +34,7 @@ var getRates = function (request, response, next) {
   var projection = {'_id':1};
 
   for (var n = 0; n < request.search.nights.length; n++) {
-    projection[request.search.nights[n].toString()] = filter;
+    projection[request.search.nights[n].toString()] = request.search.allRates ? 1 : filter;
   }
 
   request.rateResponse = [];
@@ -58,19 +58,21 @@ var getRates = function (request, response, next) {
     var rates = [];
     for(n = 0; n < request.search.nights.length; n++) {
       var nights = request.search.nights[n];
-      var stayRate = rate[nights.toString()];
-      if(!stayRate) break;
-      rates.push({
-        nights: nights,
-        roomId: stayRate[0].rid,
-        adults: stayRate[0].a,
-        children: stayRate[0].o - stayRate[0].a,
-        price: stayRate[0].p,
-        convertedPrice: stayRate[0].p / request.exchangeRates[hotel.currency],
-        rack: stayRate[0].rr
-      });
+      var stayRates = rate[nights.toString()];
+      if(!stayRates) break;
+      for(r = 0; r < stayRates.length; r++) { 
+        rates.push({
+          nights: nights,
+          roomId: stayRates[r].rid,
+          adults: stayRates[r].a,
+          children: stayRates[r].o - stayRates[0].a,
+          price: stayRates[r].p,
+          convertedPrice: stayRates[r].p / request.exchangeRates[hotel.currency],
+          rack: stayRates[r].rr
+        });
+      }
     }
-    hotel.rates = request.search.nights.length > 1 ? rates : rates[0];
+    hotel.rates = rates;
     return hotel;
   }
 

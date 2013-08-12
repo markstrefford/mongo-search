@@ -50,6 +50,7 @@ var constructHotelResponse = function(request, response, next) {
   var etag = crypto.createHash('md5');
   etag.update(JSON.stringify(request.hotels));
   response.setHeader('ETag', etag.digest('hex'));
+  response.setHeader('X-HotelCount', request.ids.length);
   response.cache('public', {maxAge: 300});
   response.send(request.hotels);
   next();
